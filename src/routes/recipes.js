@@ -93,6 +93,17 @@ const rateRecipeValidation = [
 ];
 
 // Routes
+// Handle preflight requests for recipe generation
+router.options("/generate", (req, res) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+  );
+  res.sendStatus(200);
+});
+
 router.post("/generate", auth, generateRecipeValidation, generateRecipe);
 router.post(
   "/search-by-ingredients",

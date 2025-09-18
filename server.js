@@ -16,12 +16,49 @@ const app = express();
 
 // Security middleware
 app.use(helmet());
+
+// Configure CORS for Android app compatibility
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "*",
-    credentials: true,
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or Postman)
+      if (!origin) return callback(null, true);
+
+      // Allow all origins for development (you can restrict this in production)
+      return callback(null, true);
+    },
+    credentials: false, // Set to false to avoid preflight issues with mobile apps
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allowedHeaders: [
+      "Origin",
+      "X-Requested-With",
+      "Content-Type",
+      "Accept",
+      "Authorization",
+      "Cache-Control",
+      "Pragma",
+    ],
+    exposedHeaders: ["Content-Length", "X-Foo", "X-Bar"],
+    maxAge: 86400, // 24 hours
+    preflightContinue: false,
+    optionsSuccessStatus: 200,
   })
 );
+
+// Handle preflight requests explicitly
+app.options("*", (req, res) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+  );
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control, Pragma"
+  );
+  res.header("Access-Control-Max-Age", "86400");
+  res.sendStatus(200);
+});
 
 // Rate limiting
 const limiter = rateLimit({
