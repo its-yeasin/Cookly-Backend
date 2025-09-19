@@ -11,6 +11,8 @@ const {
   rateRecipe,
 } = require("../controllers/recipeController");
 const { auth, optionalAuth } = require("../middleware/auth");
+const { aiRateLimit } = require("../middleware/validation");
+const timeout = require("../middleware/timeout");
 const config = require("../config/config");
 
 const router = express.Router();
@@ -92,7 +94,7 @@ const rateRecipeValidation = [
     .withMessage("Comment must be a string with max 500 characters"),
 ];
 
-// Routes
+// Routes with appropriate timeouts and rate limiting
 // Handle preflight requests for recipe generation
 router.options("/generate", (req, res) => {
   res.header("Access-Control-Allow-Origin", "*");
@@ -104,7 +106,16 @@ router.options("/generate", (req, res) => {
   res.sendStatus(200);
 });
 
-router.post("/generate", auth, generateRecipeValidation, generateRecipe);
+// Recipe generation with AI rate limiting and extended timeout (60 seconds)
+router.post(
+  "/generate",
+  aiRateLimit,
+  timeout(60000),
+  auth,
+  generateRecipeValidation,
+  generateRecipe
+);
+
 router.post(
   "/search-by-ingredients",
   searchByIngredientsValidation,

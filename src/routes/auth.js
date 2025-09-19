@@ -8,6 +8,7 @@ const {
   changePassword,
 } = require("../controllers/authController");
 const { auth } = require("../middleware/auth");
+const { authRateLimit } = require("../middleware/validation");
 
 const router = express.Router();
 
@@ -75,9 +76,9 @@ const changePasswordValidation = [
     ),
 ];
 
-// Routes
-router.post("/register", registerValidation, register);
-router.post("/login", loginValidation, login);
+// Routes with rate limiting for auth endpoints
+router.post("/register", authRateLimit, registerValidation, register);
+router.post("/login", authRateLimit, loginValidation, login);
 router.get("/me", auth, getMe);
 router.put("/profile", auth, updateProfileValidation, updateProfile);
 router.put("/change-password", auth, changePasswordValidation, changePassword);
