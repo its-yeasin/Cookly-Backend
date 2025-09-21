@@ -3,8 +3,10 @@ const config = require("./config");
 
 const connectDB = async () => {
   try {
-    // Set mongoose to not buffer commands when disconnected
-    mongoose.set("bufferCommands", false);
+    if (process.env.NODE_ENV === "development") {
+      // Set mongoose to not buffer commands when disconnected
+      mongoose.set("bufferCommands", false);
+    }
 
     const conn = await mongoose.connect(config.mongodbUri, {
       serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
