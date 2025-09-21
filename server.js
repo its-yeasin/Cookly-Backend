@@ -40,10 +40,22 @@ process.on("unhandledRejection", (err, promise) => {
   }
 });
 
-// Connect to MongoDB
-connectDB();
-
 const app = express();
+
+// Initialize database connection before starting server
+const initializeApp = async () => {
+  try {
+    // Connect to MongoDB first
+    await connectDB();
+    console.log("✅ Database connection established");
+  } catch (error) {
+    console.error("❌ Failed to connect to database:", error.message);
+    // In development, continue without database
+    if (process.env.NODE_ENV === "production") {
+      process.exit(1);
+    }
+  }
+};
 
 // Request logging and tracking
 app.use(requestLogger);
@@ -275,33 +287,41 @@ const PORT = process.env.PORT || 5000;
 let server;
 
 // Start server with error handling
-try {
-  server = app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`📱 Environment: ${process.env.NODE_ENV || "development"}`);
-  });
+const startServer = async () => {
+  try {
+    // Initialize database connection first
+    await initializeApp();
 
-  // Handle server errors
-  server.on("error", (err) => {
-    if (err.code === "EADDRINUSE") {
-      console.error(`❌ Port ${PORT} is already in use`);
-      process.exit(1);
-    } else {
-      console.error("❌ Server error:", err);
-      process.exit(1);
-    }
-  });
-} catch (error) {
-  console.error("❌ Failed to start server:", error);
-  process.exit(1);
-}
+    server = app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`📱 Environment: ${process.env.NODE_ENV || "development"}`);
+    });
+
+    // Handle server errors
+    server.on("error", (err) => {
+      if (err.code === "EADDRINUSE") {
+        console.error(`❌ Port ${PORT} is already in use`);
+        process.exit(1);
+      } else {
+        console.error("❌ Server error:", err);
+        process.exit(1);
+      }
+    });
+  } catch (error) {
+    console.error("❌ Failed to start server:", error);
+    process.exit(1);
+  }
+};
+
+// Start the server
+startServer();
 
 // Graceful shutdown handling
-const gracefulShutdown = (signal) => {
+const gracefulShutdown = async (signal) => {
   console.log(`\n📤 Received ${signal}. Starting graceful shutdown...`);
 
   if (server) {
-    server.close((err) => {
+    server.close(async (err) => {
       if (err) {
         console.error("❌ Error during server shutdown:", err);
         process.exit(1);
@@ -311,11 +331,14 @@ const gracefulShutdown = (signal) => {
 
       // Close database connection
       const mongoose = require("mongoose");
-      mongoose.connection.close(() => {
+      try {
+        await mongoose.connection.close();
         console.log("🔌 Database connection closed");
-        console.log("✅ Graceful shutdown completed");
-        process.exit(0);
-      });
+      } catch (err) {
+        console.error("❌ Error closing database connection:", err.message);
+      }
+      console.log("✅ Graceful shutdown completed");
+      process.exit(0);
     });
 
     // Force shutdown after 10 seconds

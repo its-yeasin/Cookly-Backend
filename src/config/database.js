@@ -12,11 +12,17 @@ const connectDB = async () => {
     });
 
     console.log(`📦 MongoDB Connected: ${conn.connection.host}`);
+    return conn;
   } catch (error) {
     console.log("📦 MongoDB not available - continuing without database");
-    // Don't exit the process in development to allow testing other features
+
+    // In development, throw error to be handled by caller
+    // In production, exit the process
     if (process.env.NODE_ENV === "production") {
       process.exit(1);
+    } else {
+      // Re-throw the error so the caller can decide what to do
+      throw error;
     }
   }
 };
