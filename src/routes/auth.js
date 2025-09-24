@@ -23,9 +23,9 @@ const registerValidation = [
     .normalizeEmail()
     .withMessage("Please enter a valid email"),
   body("password")
-    .isLength({ min: 6 })
-    .withMessage("Password must be at least 6 characters long")
-    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+    .isLength({ min: 5 })
+    .withMessage("Password must be at least 5 characters long")
+    // .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
     .withMessage(
       "Password must contain at least one uppercase letter, one lowercase letter, and one number"
     ),
@@ -68,9 +68,9 @@ const changePasswordValidation = [
     .notEmpty()
     .withMessage("Current password is required"),
   body("newPassword")
-    .isLength({ min: 6 })
-    .withMessage("New password must be at least 6 characters long")
-    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+    .isLength({ min: 5 })
+    .withMessage("New password must be at least 5 characters long")
+    // .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
     .withMessage(
       "New password must contain at least one uppercase letter, one lowercase letter, and one number"
     ),
